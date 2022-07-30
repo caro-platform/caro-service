@@ -1,0 +1,4 @@
+{
+    "exec": "/data/caro/*",
+    "incoming_connections": ["**"]
+}
