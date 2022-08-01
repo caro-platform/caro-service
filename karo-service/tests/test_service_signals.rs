@@ -11,51 +11,53 @@ use tokio::{
     time,
 };
 
-use caro_bus_common::HUB_SOCKET_PATH_ENV;
-use caro_bus_hub::{args::Args, hub::Hub};
-use caro_derive::{peer_impl, service_impl, state, Peer, Service};
-use caro_service::{
+use karo_bus_common::HUB_SOCKET_PATH_ENV;
+use karo_bus_hub::{args::Args, hub::Hub};
+use karo_derive::{peer_impl, service_impl, signal, Peer, Service};
+use karo_service::{
     peer::{PeerName, PeerSignalsAndStates},
-    Peer as CaroPeer, Service as CaroService, State,
+    Peer as KaroPeer, Service as KaroService, Signal,
 };
 
 #[derive(Service)]
-#[service("com.register_state")]
+#[service("com.register_signal")]
 struct TestServer {
-    #[state(11)]
-    state: State<i32>,
+    #[signal]
+    signal: Signal<String>,
 }
 
 #[service_impl]
 impl TestServer {
     pub fn new() -> Self {
         Self {
-            state: State::new(),
+            signal: Signal::new(),
         }
     }
 }
 
 #[derive(Peer)]
-#[peer(name = "com.register_state", features = ["subscriptions"])]
+#[peer(name = "com.register_signal", features = ["subscriptions"])]
 struct TestPeer {
-    pub received_value: i32,
+    pub received_value: String,
 }
 
 #[peer_impl]
 impl TestPeer {
     pub fn new() -> Self {
-        Self { received_value: 0 }
+        Self {
+            received_value: "".into(),
+        }
     }
 
-    #[state]
-    async fn state(&mut self, value: i32) {
-        println!("State emitted: {}", value);
+    #[signal]
+    async fn signal(&mut self, value: String) {
+        println!("Signal emitted: {}", value);
         self.received_value = value;
     }
 }
 
 #[derive(Service)]
-#[service("com.watch_state")]
+#[service("com.subscribe_on_signal")]
 struct TestClient {
     #[peer]
     pub peer: Pin<Box<TestPeer>>,
@@ -74,7 +76,7 @@ async fn start_hub(socket_path: &str, service_files_dir: &str) -> Sender<()> {
     env::set_var(HUB_SOCKET_PATH_ENV, socket_path);
 
     let args = Args {
-        log_level: LevelFilter::Trace,
+        log_level: LevelFilter::Debug,
         service_files_dir: service_files_dir.into(),
     };
 
@@ -112,17 +114,17 @@ async fn write_service_file(service_dir: &Path, service_name: &str, content: Jso
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_service_states() {
-    let socket_dir = TempDir::new("caro_hub_socket_dir").expect("Failed to create socket tempdir");
+async fn test_service_signals() {
+    let socket_dir = TempDir::new("karo_hub_socket_dir").expect("Failed to create socket tempdir");
     let socket_path: String = socket_dir
         .path()
-        .join("caro_hub.socket")
+        .join("karo_hub.socket")
         .as_os_str()
         .to_str()
         .unwrap()
         .into();
 
-    let service_dir = TempDir::new("test_states").expect("Failed to create tempdir");
+    let service_dir = TempDir::new("test_signals").expect("Failed to create tempdir");
 
     let shutdown_tx = start_hub(
         &socket_path,
@@ -137,13 +139,13 @@ async fn test_service_states() {
         r#"
             {
                 "exec": "/**/*",
-                "incoming_connections": ["com.watch_state"]
+                "incoming_connections": ["com.subscribe_on_signal"]
             }
             "#,
     )
     .unwrap();
 
-    let register_service_name = "com.register_state";
+    let register_service_name = "com.register_signal";
     write_service_file(service_dir.path(), register_service_name, service_file_json).await;
 
     let mut server = Box::pin(TestServer::new());
@@ -160,18 +162,16 @@ async fn test_service_states() {
     )
     .unwrap();
 
-    let service_name = "com.watch_state";
+    let service_name = "com.subscribe_on_signal";
     write_service_file(service_dir.path(), service_name, service_file_json).await;
 
     let mut client = Box::pin(TestClient::new());
     client.register_service().await.unwrap();
 
+    server.signal.emit("Hello".into());
     time::sleep(Duration::from_millis(10)).await;
-    assert_eq!(client.peer.received_value, 11);
 
-    server.state.set(42);
-    time::sleep(Duration::from_millis(10)).await;
-    assert_eq!(client.peer.received_value, 42);
+    assert_eq!(&client.peer.received_value, "Hello");
 
     shutdown_tx
         .send(())

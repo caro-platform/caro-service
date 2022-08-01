@@ -1,7 +1,7 @@
 use serde::Serialize;
 
-use caro_bus_common::errors::Error as BusError;
-use caro_bus_lib::{signal::Signal as BusSignal, Result as BusResult};
+use karo_bus_common::errors::Error as BusError;
+use karo_bus_lib::{signal::Signal as BusSignal, Result as BusResult};
 
 pub struct Signal<T: Serialize> {
     internal: Option<BusSignal<T>>,

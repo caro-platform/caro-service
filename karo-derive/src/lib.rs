@@ -33,13 +33,13 @@ pub fn service(input: TokenStream) -> TokenStream {
     if features.methods {
         quote! {
             #[async_trait]
-            impl caro_service::Service for Pin<Box<#struct_ident>>
-                where Self: caro_service::service::ServiceMethods {
+            impl karo_service::Service for Pin<Box<#struct_ident>>
+                where Self: karo_service::service::ServiceMethods {
                 fn service_name() -> &'static str {
                     #service_name
                 }
 
-                async fn register_service(&mut self) -> caro_bus_lib::Result<()> {
+                async fn register_service(&mut self) -> karo_bus_lib::Result<()> {
                     Self::register_bus().await?;
                     self.register_methods(Self::service_name()).await?;
 
@@ -53,12 +53,12 @@ pub fn service(input: TokenStream) -> TokenStream {
     } else {
         quote! {
             #[async_trait]
-            impl caro_service::Service for #struct_ident {
+            impl karo_service::Service for #struct_ident {
                 fn service_name() -> &'static str {
                     #service_name
                 }
 
-                async fn register_service(&mut self) -> caro_bus_lib::Result<()> {
+                async fn register_service(&mut self) -> karo_bus_lib::Result<()> {
                     Self::register_bus().await?;
 
                     #(#peers);*
@@ -88,9 +88,9 @@ pub fn service_impl(_attr: TokenStream, input: TokenStream) -> TokenStream {
         #imp
 
         #[async_trait]
-        impl caro_service::service::ServiceMethods for Pin<Box<#self_name>> {
-            async fn register_methods(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
-                let context = caro_service::this::This { pointer: self };
+        impl karo_service::service::ServiceMethods for Pin<Box<#self_name>> {
+            async fn register_methods(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
+                let context = karo_service::this::This { pointer: self };
 
                 #(#methods);*
                 Ok(())
@@ -126,9 +126,9 @@ pub fn peer(input: TokenStream) -> TokenStream {
     let peer_impl = if features.subscriptions {
         quote! {
             #[async_trait]
-            impl caro_service::peer::Peer for Pin<Box<#struct_ident>>
-                where Pin<Box<#struct_ident>>: caro_service::peer::PeerSignalsAndStates {
-                async fn register(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
+            impl karo_service::peer::Peer for Pin<Box<#struct_ident>>
+                where Pin<Box<#struct_ident>>: karo_service::peer::PeerSignalsAndStates {
+                async fn register(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
                     let peer = Self::register_peer(service_name, #peer_name).await?;
                     self.register_callbacks(service_name).await?;
 
@@ -140,8 +140,8 @@ pub fn peer(input: TokenStream) -> TokenStream {
     } else {
         quote! {
             #[async_trait]
-            impl caro_service::peer::Peer for Pin<Box<#struct_ident>> {
-                async fn register(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
+            impl karo_service::peer::Peer for Pin<Box<#struct_ident>> {
+                async fn register(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
                     let peer = Self::register_peer(service_name, #peer_name).await?;
 
                     #(#procedures);*
@@ -152,7 +152,7 @@ pub fn peer(input: TokenStream) -> TokenStream {
     };
 
     quote! {
-        impl caro_service::peer::PeerName for Pin<Box<#struct_ident>> {
+        impl karo_service::peer::PeerName for Pin<Box<#struct_ident>> {
             fn peer_name() -> &'static str { #peer_name }
         }
 
@@ -183,10 +183,10 @@ pub fn peer_impl(_attr: TokenStream, input: TokenStream) -> TokenStream {
         #imp
 
         #[async_trait]
-        impl caro_service::peer::PeerSignalsAndStates for Pin<Box<#self_name>>
-            where Pin<Box<#self_name>>: caro_service::peer::PeerName {
-            async fn register_callbacks(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
-                let context = caro_service::this::This { pointer: self };
+        impl karo_service::peer::PeerSignalsAndStates for Pin<Box<#self_name>>
+            where Pin<Box<#self_name>>: karo_service::peer::PeerName {
+            async fn register_callbacks(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
+                let context = karo_service::this::This { pointer: self };
 
                 #(#signals);*
                 #(#states);*

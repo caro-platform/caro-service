@@ -1,7 +1,7 @@
 use std::{future::Future, sync::Arc};
 
 use async_trait::async_trait;
-use caro_bus_lib::{self, Result as BusResult};
+use karo_bus_lib::{self, Result as BusResult};
 use serde::de::DeserializeOwned;
 
 pub trait PeerName {
@@ -10,12 +10,12 @@ pub trait PeerName {
 
 #[async_trait]
 pub trait Peer {
-    async fn register(&mut self, service_name: &str) -> caro_bus_lib::Result<()>;
+    async fn register(&mut self, service_name: &str) -> karo_bus_lib::Result<()>;
 
     async fn register_peer(
         service_name: &str,
         peer_name: &str,
-    ) -> BusResult<Arc<caro_bus_lib::peer::Peer>> {
+    ) -> BusResult<Arc<karo_bus_lib::peer::Peer>> {
         match crate::service::SERVICE_HANDLES
             .lock()
             .await

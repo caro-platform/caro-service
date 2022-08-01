@@ -11,45 +11,51 @@ use tokio::{
     time,
 };
 
-use caro_bus_common::HUB_SOCKET_PATH_ENV;
-use caro_bus_hub::{args::Args, hub::Hub};
-use caro_derive::{method, peer_impl, service_impl, Peer, Service};
-use caro_service::{service::ServiceMethods, Method, Peer as CaroPeer, Service as CaroService};
+use karo_bus_common::HUB_SOCKET_PATH_ENV;
+use karo_bus_hub::{args::Args, hub::Hub};
+use karo_derive::{peer_impl, service_impl, state, Peer, Service};
+use karo_service::{
+    peer::{PeerName, PeerSignalsAndStates},
+    Peer as KaroPeer, Service as KaroService, State,
+};
 
 #[derive(Service)]
-#[service(name = "com.register_method", features=["methods"])]
-struct TestServer {}
+#[service("com.register_state")]
+struct TestServer {
+    #[state(11)]
+    state: State<i32>,
+}
 
 #[service_impl]
 impl TestServer {
     pub fn new() -> Self {
-        Self {}
-    }
-
-    #[method]
-    async fn hello_method(&mut self, value: i32) -> String {
-        format!("Hello, {}", value)
+        Self {
+            state: State::new(),
+        }
     }
 }
 
 #[derive(Peer)]
-#[peer("com.register_method")]
+#[peer(name = "com.register_state", features = ["subscriptions"])]
 struct TestPeer {
-    #[method]
-    pub hello_method: Method<i32, String>,
+    pub received_value: i32,
 }
 
 #[peer_impl]
 impl TestPeer {
     pub fn new() -> Self {
-        Self {
-            hello_method: Method::new(),
-        }
+        Self { received_value: 0 }
+    }
+
+    #[state]
+    async fn state(&mut self, value: i32) {
+        println!("State emitted: {}", value);
+        self.received_value = value;
     }
 }
 
 #[derive(Service)]
-#[service("com.call_method")]
+#[service("com.watch_state")]
 struct TestClient {
     #[peer]
     pub peer: Pin<Box<TestPeer>>,
@@ -106,17 +112,17 @@ async fn write_service_file(service_dir: &Path, service_name: &str, content: Jso
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_service_methods() {
-    let socket_dir = TempDir::new("caro_hub_socket_dir").expect("Failed to create socket tempdir");
+async fn test_service_states() {
+    let socket_dir = TempDir::new("karo_hub_socket_dir").expect("Failed to create socket tempdir");
     let socket_path: String = socket_dir
         .path()
-        .join("caro_hub.socket")
+        .join("karo_hub.socket")
         .as_os_str()
         .to_str()
         .unwrap()
         .into();
 
-    let service_dir = TempDir::new("test_method_calls").expect("Failed to create tempdir");
+    let service_dir = TempDir::new("test_states").expect("Failed to create tempdir");
 
     let shutdown_tx = start_hub(
         &socket_path,
@@ -131,13 +137,13 @@ async fn test_service_methods() {
         r#"
             {
                 "exec": "/**/*",
-                "incoming_connections": ["com.call_method"]
+                "incoming_connections": ["com.watch_state"]
             }
             "#,
     )
     .unwrap();
 
-    let register_service_name = "com.register_method";
+    let register_service_name = "com.register_state";
     write_service_file(service_dir.path(), register_service_name, service_file_json).await;
 
     let mut server = Box::pin(TestServer::new());
@@ -154,22 +160,18 @@ async fn test_service_methods() {
     )
     .unwrap();
 
-    let service_name = "com.call_method";
+    let service_name = "com.watch_state";
     write_service_file(service_dir.path(), service_name, service_file_json).await;
 
     let mut client = Box::pin(TestClient::new());
     client.register_service().await.unwrap();
 
-    // Valid call
-    assert_eq!(
-        client
-            .peer
-            .hello_method
-            .call(&42)
-            .await
-            .expect("Failed to make a valid call"),
-        "Hello, 42"
-    );
+    time::sleep(Duration::from_millis(10)).await;
+    assert_eq!(client.peer.received_value, 11);
+
+    server.state.set(42);
+    time::sleep(Duration::from_millis(10)).await;
+    assert_eq!(client.peer.received_value, 42);
 
     shutdown_tx
         .send(())

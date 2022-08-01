@@ -1,4 +1,4 @@
 {
-    "exec": "/data/caro/*",
+    "exec": "/data/karo/*",
     "incoming_connections": ["**"]
 }

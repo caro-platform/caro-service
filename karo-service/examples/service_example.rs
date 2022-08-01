@@ -1,8 +1,8 @@
 use std::{pin::Pin, time::Duration};
 
 use async_trait::async_trait;
-use caro_bus_lib::{self, Result as BusResult};
-use caro_service::{
+use karo_bus_lib::{self, Result as BusResult};
+use karo_service::{
     method::Method,
     peer::{Peer, PeerSignalsAndStates},
     service::{Service, ServiceMethods},
@@ -32,8 +32,8 @@ impl PeerExample {
 
 #[async_trait]
 impl Peer for Pin<Box<PeerExample>> {
-    async fn register(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
-        let peer = Self::register_peer(service_name, "caro.service.peer").await?;
+    async fn register(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
+        let peer = Self::register_peer(service_name, "karo.service.peer").await?;
 
         self.method.init("method", peer)?;
         Ok(())
@@ -43,7 +43,7 @@ impl Peer for Pin<Box<PeerExample>> {
 #[async_trait]
 impl PeerSignalsAndStates for Pin<Box<PeerExample>> {
     async fn register_callbacks(&mut self, service_name: &str) -> BusResult<()> {
-        let context = caro_service::this::This { pointer: self };
+        let context = karo_service::this::This { pointer: self };
 
         Self::subscribe_on_signal(
             service_name,
@@ -95,7 +95,7 @@ impl Service for Pin<Box<ServiceExample>> {
         "com.examples.service"
     }
 
-    async fn register_service(&mut self) -> caro_bus_lib::Result<()> {
+    async fn register_service(&mut self) -> karo_bus_lib::Result<()> {
         Self::register_bus().await?;
 
         self.peer.register(Self::service_name()).await?;
@@ -111,8 +111,8 @@ impl Service for Pin<Box<ServiceExample>> {
 
 #[async_trait]
 impl ServiceMethods for Pin<Box<ServiceExample>> {
-    async fn register_methods(&mut self, service_name: &str) -> caro_bus_lib::Result<()> {
-        let context = caro_service::this::This { pointer: self };
+    async fn register_methods(&mut self, service_name: &str) -> karo_bus_lib::Result<()> {
+        let context = karo_service::this::This { pointer: self };
 
         Self::register_method(service_name, "method", move |p| async move {
             context.get().hello_method(p).await

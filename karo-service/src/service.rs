@@ -5,11 +5,11 @@ use lazy_static::lazy_static;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::Mutex;
 
-use caro_bus_lib::{Bus, Result as BusResult};
+use karo_bus_lib::{Bus, Result as BusResult};
 
 pub(crate) struct ServiceHandle {
     pub bus: Bus,
-    pub connections: HashMap<String, Arc<caro_bus_lib::peer::Peer>>,
+    pub connections: HashMap<String, Arc<karo_bus_lib::peer::Peer>>,
 }
 
 lazy_static! {
