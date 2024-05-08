@@ -1,15 +1,15 @@
 use std::{pin::Pin, time::Duration};
 
-use karo_service::{
+use krossbar_service::{
     peer::{PeerName, PeerSignalsAndStates},
     service::ServiceMethods,
-    Peer as KaroPeer, Service as KaroService,
+    Peer as KrossbarPeer, Service as KrossbarService,
 };
 use log::LevelFilter;
 
 use async_trait::async_trait;
-use karo_derive::{method, peer_impl, service_impl, signal, state, Peer, Service};
-use karo_service::Method;
+use krossbar_derive::{method, peer_impl, service_impl, signal, state, Peer, Service};
+use krossbar_service::Method;
 
 #[derive(Peer)]
 #[peer(name = "com.examples.service", features=["subscriptions"])]

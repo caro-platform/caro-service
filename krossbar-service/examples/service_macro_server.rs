@@ -3,8 +3,8 @@ use std::{pin::Pin, time::Duration};
 use async_trait::async_trait;
 use log::LevelFilter;
 
-use karo_derive::{method, service_impl, Service};
-use karo_service::{service::ServiceMethods, Service as KaroService, Signal, State};
+use krossbar_derive::{method, service_impl, Service};
+use krossbar_service::{service::ServiceMethods, Service as KrossbarService, Signal, State};
 
 #[derive(Service)]
 //#[service("com.examples.service")]

@@ -11,12 +11,12 @@ use tokio::{
     time,
 };
 
-use karo_bus_common::HUB_SOCKET_PATH_ENV;
-use karo_bus_hub::{args::Args, hub::Hub};
-use karo_derive::{peer_impl, service_impl, state, Peer, Service};
-use karo_service::{
+use krossbar_bus_common::HUB_SOCKET_PATH_ENV;
+use krossbar_bus_hub::{args::Args, hub::Hub};
+use krossbar_derive::{peer_impl, service_impl, state, Peer, Service};
+use krossbar_service::{
     peer::{PeerName, PeerSignalsAndStates},
-    Peer as KaroPeer, Service as KaroService, State,
+    Peer as KrossbarPeer, Service as KrossbarService, State,
 };
 
 #[derive(Service)]
@@ -113,10 +113,10 @@ async fn write_service_file(service_dir: &Path, service_name: &str, content: Jso
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_service_states() {
-    let socket_dir = TempDir::new("karo_hub_socket_dir").expect("Failed to create socket tempdir");
+    let socket_dir = TempDir::new("krossbar_hub_socket_dir").expect("Failed to create socket tempdir");
     let socket_path: String = socket_dir
         .path()
-        .join("karo_hub.socket")
+        .join("krossbar_hub.socket")
         .as_os_str()
         .to_str()
         .unwrap()

@@ -1,7 +1,7 @@
 use serde::Serialize;
 
-use karo_bus_common::errors::Error as BusError;
-use karo_bus_lib::{state::State as BusState, Result as BusResult};
+use krossbar_bus_common::errors::Error as BusError;
+use krossbar_bus_lib::{state::State as BusState, Result as BusResult};
 
 pub struct State<T: Serialize> {
     internal: Option<BusState<T>>,

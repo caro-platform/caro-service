@@ -5,7 +5,7 @@ pub mod signal;
 pub mod state;
 pub mod this;
 
-pub use karo_derive::*;
+pub use krossbar_derive::*;
 pub use method::Method;
 pub use peer::Peer;
 pub use service::Service;

@@ -1,4 +1,4 @@
 {
-    "exec": "/data/karo/*",
+    "exec": "/data/krossbar/*",
     "incoming_connections": ["**"]
 }
