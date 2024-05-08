@@ -1,18 +1,18 @@
 [package]
-name = "krossbar-service"
+name = "krossbar"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.75"
 authors = ["Alexander Smoktal <https://github.com/alexander-smoktal>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/krossbar-platform/krossbar-common"
+repository = "https://github.com/krossbar-platform/krossbar"
 homepage = "https://krossbar.rs"
 description = """
 Krossbar service library
 """
 categories = ["network-programming"]
-keywords = ["rpc", "service", "logging"]
+keywords = ["service", "rpc", "logging"]
 
 [dependencies]
 async-trait = "0.1"

@@ -6,7 +6,7 @@ rust-version = "1.75"
 authors = ["Alexander Smoktal <https://github.com/alexander-smoktal>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/krossbar-platform/krossbar-common"
+repository = "https://github.com/krossbar-platform/krossbar"
 homepage = "https://krossbar.rs"
 description = """
 Krossbar service derives
